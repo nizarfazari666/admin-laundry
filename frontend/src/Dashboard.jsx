@@ -20,7 +20,8 @@ export default function Dashboard() {
     { nama: 'Cuci Komplit (Reguler)', harga: 6000 },
     { nama: 'Cuci Kering Saja', harga: 5000 },
     { nama: 'Setrika Saja', harga: 4000 },
-    { nama: 'Cuci Express 1 Hari', harga: 15000 }
+    { nama: 'Cuci Express 1 Hari', harga: 15000 },
+    { nama: 'Layanan Custom / Borongan', harga: 0 } // Tambahkan baris ini
   ];
 
   const [formData, setFormData] = useState({
@@ -88,6 +89,7 @@ export default function Dashboard() {
     const { name, value } = e.target;
     setFormData(prev => {
       const newData = { ...prev, [name]: value };
+      // Hitung otomatis saat layanan atau berat berubah
       if (name === 'layanan' || name === 'berat') {
         const selected = listLayanan.find(l => l.nama === newData.layanan);
         newData.total_harga = (selected ? selected.harga : 0) * (parseFloat(newData.berat) || 0);
@@ -207,10 +209,11 @@ export default function Dashboard() {
     }, 500);
   };
 
+  // PERBAIKAN: Menambahkan Optional Chaining (?.) dan perlindungan default nilai
   const daftarPelanggan = transaksi.reduce((acc, curr) => {
-    const isExist = acc.find(p => p.nama_pelanggan.toLowerCase() === curr.nama_pelanggan.toLowerCase() && p.no_hp === curr.no_hp);
+    const isExist = acc.find(p => p.nama_pelanggan?.toLowerCase() === curr.nama_pelanggan?.toLowerCase() && p.no_hp === curr.no_hp);
     if (!isExist) {
-      acc.push({ nama_pelanggan: curr.nama_pelanggan, no_hp: curr.no_hp, total_transaksi: 1 });
+      acc.push({ nama_pelanggan: curr.nama_pelanggan || 'Tanpa Nama', no_hp: curr.no_hp || '-', total_transaksi: 1 });
     } else {
       isExist.total_transaksi += 1;
     }
@@ -271,13 +274,16 @@ export default function Dashboard() {
             ) : (
               transaksi.map((t) => (
                 <tr key={t.id_transaksi} style={styles.tableBodyRow}>
+                  {/* Ubah td yang ini */}
                   <td style={styles.tableBodyCell}>
-                    <span style={styles.textHighlight}>#{t.id_transaksi}</span><br/>
-                    <small style={styles.subtextDim}>{t.tgl_masuk ? new Date(t.tgl_masuk).toLocaleDateString('id-ID') : '-'}</small>
+                  <span style={styles.textHighlight}>#{t.id_transaksi}</span><br/>
+                  {/* Tambahkan baris kode resi ini di bawah ID */}
+                  <small style={{ color: '#fbbf24', fontWeight: 'bold' }}>{t.kode_resi}</small><br/>
+                     <small style={styles.subtextDim}>{t.tgl_masuk ? new Date(t.tgl_masuk).toLocaleDateString('id-ID') : '-'}</small>
                   </td>
                   <td style={styles.tableBodyCell}>
-                    <b style={styles.textMainBold}>{t.nama_pelanggan}</b><br/>
-                    <small style={styles.subtextDim}>{t.no_hp}</small>
+                    <b style={styles.textMainBold}>{t.nama_pelanggan || 'Tanpa Nama'}</b><br/>
+                    <small style={styles.subtextDim}>{t.no_hp || '-'}</small>
                   </td>
                   <td style={styles.tableBodyCell_Normal}>{t.layanan} ({t.berat} Kg)</td>
                   <td style={styles.tableBodyCell_Price}>{Number(t.total_harga || 0).toLocaleString('id-ID')}</td>
@@ -349,8 +355,18 @@ export default function Dashboard() {
               
               <input type="number" name="berat" placeholder="Berat (Kg)" value={formData.berat} onChange={handleInputChange} required style={inputStyle} />
               
-              <div style={styles.modalTotalDisplayBox}>
-                Total Harga: Rp {Number(formData.total_harga || 0).toLocaleString('id-ID')}
+              {/* PERUBAHAN DI SINI: Total Harga sekarang bisa diketik manual */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginBottom: '8px' }}>
+                <label style={{ fontSize: '13px', color: '#94a3b8', fontWeight: '600', marginLeft: '4px' }}>Total Harga (Rp) - Bisa Diubah Manual</label>
+                <input 
+                  type="number" 
+                  name="total_harga" 
+                  placeholder="Masukkan Total Harga" 
+                  value={formData.total_harga} 
+                  onChange={handleInputChange} 
+                  required 
+                  style={{ ...inputStyle, fontSize: '18px', fontWeight: 'bold', color: '#60a5fa', textAlign: 'center', backgroundColor: '#0b0f19' }} 
+                />
               </div>
 
               {isEdit && (
@@ -389,9 +405,9 @@ export default function Dashboard() {
           <h2 style={{ textAlign: 'center', margin: 0 }}>STRUK</h2>
           <p style={{ textAlign: 'center', fontSize: '12px', margin: '5px 0' }}>Solusi Cepat & Bersih</p>
           <hr style={{ borderTop: '1px dashed black' }} />
-          <p>Tgl : {invoiceData.tgl_masuk ? new Date(invoiceData.tgl_masuk).toLocaleString('id-ID') : '-'}</p>
           <p>No  : #{invoiceData.id_transaksi}</p>
-          <p>Nama: {invoiceData.nama_pelanggan}</p>
+          <p>Resi: {invoiceData.kode_resi || 'Tidak Ada (Data Lama)'}</p>
+          <p>Nama: {invoiceData.nama_pelanggan || '-'}</p>
           <hr style={{ borderTop: '1px dashed black' }} />
           <p>{invoiceData.layanan}</p>
           <p>Berat: {invoiceData.berat} Kg</p>

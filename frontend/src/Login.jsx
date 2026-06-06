@@ -74,7 +74,8 @@ export default function Login() {
         </form>
         <div style={styles.utilityZone}>
           <p style={styles.forgotContainer}>
-            <span style={styles.subtleForgotLink}>Lupa Password?</span>
+            {/* Bagian ini sudah diubah menjadi Link */}
+            <Link to="/forgot-password" style={styles.subtleForgotLink}>Lupa Password?</Link>
           </p>
           
           <p style={styles.registerContainer}>
@@ -180,6 +181,7 @@ const styles = {
     fontSize: '13px',
     cursor: 'pointer',
     fontWeight: '500',
+    textDecoration: 'none',
     transition: 'color 0.2s ease',
   },
   registerContainer: {
